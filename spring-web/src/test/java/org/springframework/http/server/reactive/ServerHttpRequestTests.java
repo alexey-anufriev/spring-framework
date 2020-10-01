@@ -184,9 +184,9 @@ public class ServerHttpRequestTests {
 	void mutateContextPathWithoutUpdatingPathShouldFail() throws Exception {
 		ServerHttpRequest request = createRequest("/context/path", "/context");
 
-		assertThatThrownBy(() -> request.mutate().path("/fail").build())
+		assertThatThrownBy(() -> request.mutate().contextPath("/fail").build())
 				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessage("Invalid contextPath '/context': must match the start of requestPath: '/fail'");
+				.hasMessage("Invalid contextPath '/fail': must match the start of requestPath: '/context/path'");
 	}
 
 	private ServerHttpRequest createRequest(String uriString) throws Exception {
@@ -198,7 +198,7 @@ public class ServerHttpRequestTests {
 		MockHttpServletRequest request = new TestHttpServletRequest(uri);
 		request.setContextPath(contextPath);
 		AsyncContext asyncContext = new MockAsyncContext(request, new MockHttpServletResponse());
-		return new ServletServerHttpRequest(request, asyncContext, "", new DefaultDataBufferFactory(), 1024);
+		return new ServletServerHttpRequest(request, asyncContext, "", DefaultDataBufferFactory.sharedInstance, 1024);
 	}
 
 	private static class TestHttpServletRequest extends MockHttpServletRequest {

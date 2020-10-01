@@ -34,6 +34,7 @@ import org.springframework.util.Assert;
  * Reactor-Netty implementation of {@link ClientHttpConnector}.
  *
  * @author Brian Clozel
+ * @author Rossen Stoyanchev
  * @since 5.0
  * @see reactor.netty.http.client.HttpClient
  */
@@ -116,8 +117,8 @@ public class ReactorClientHttpConnector implements ClientHttpConnector {
 				.next()
 				.doOnCancel(() -> {
 					ReactorClientHttpResponse response = responseRef.get();
-					if (response != null && response.bodyNotSubscribed()) {
-						response.getConnection().dispose();
+					if (response != null) {
+						response.releaseAfterCancel(method);
 					}
 				});
 	}

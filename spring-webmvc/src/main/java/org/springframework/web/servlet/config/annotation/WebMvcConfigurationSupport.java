@@ -52,6 +52,7 @@ import org.springframework.http.converter.feed.RssChannelHttpMessageConverter;
 import org.springframework.http.converter.json.GsonHttpMessageConverter;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.http.converter.json.JsonbHttpMessageConverter;
+import org.springframework.http.converter.json.KotlinSerializationJsonHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.converter.smile.MappingJackson2SmileHttpMessageConverter;
 import org.springframework.http.converter.support.AllEncompassingFormHttpMessageConverter;
@@ -109,6 +110,7 @@ import org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 import org.springframework.web.servlet.view.ViewResolverComposite;
 import org.springframework.web.util.UrlPathHelper;
+import org.springframework.web.util.pattern.PathPatternParser;
 
 /**
  * This is the main class providing the configuration behind the MVC Java config.
@@ -207,6 +209,8 @@ public class WebMvcConfigurationSupport implements ApplicationContextAware, Serv
 
 	private static final boolean jsonbPresent;
 
+	private static final boolean kotlinSerializationJsonPresent;
+
 	static {
 		ClassLoader classLoader = WebMvcConfigurationSupport.class.getClassLoader();
 		romePresent = ClassUtils.isPresent("com.rometools.rome.feed.WireFeed", classLoader);
@@ -218,6 +222,7 @@ public class WebMvcConfigurationSupport implements ApplicationContextAware, Serv
 		jackson2CborPresent = ClassUtils.isPresent("com.fasterxml.jackson.dataformat.cbor.CBORFactory", classLoader);
 		gsonPresent = ClassUtils.isPresent("com.google.gson.Gson", classLoader);
 		jsonbPresent = ClassUtils.isPresent("javax.json.bind.Jsonb", classLoader);
+		kotlinSerializationJsonPresent = ClassUtils.isPresent("kotlinx.serialization.json.Json", classLoader);
 	}
 
 
@@ -519,6 +524,7 @@ public class WebMvcConfigurationSupport implements ApplicationContextAware, Serv
 	 * <li>{@link #addInterceptors} for adding handler interceptors.
 	 * <li>{@link #addCorsMappings} to configure cross origin requests processing.
 	 * <li>{@link #configureMessageConverters} for adding custom message converters.
+	 * <li>{@link #configurePathMatch(PathMatchConfigurer)} for customizing the {@link PathPatternParser}.
 	 * </ul>
 	 * @since 5.2
 	 */
@@ -532,6 +538,12 @@ public class WebMvcConfigurationSupport implements ApplicationContextAware, Serv
 		mapping.setInterceptors(getInterceptors(conversionService, resourceUrlProvider));
 		mapping.setCorsConfigurations(getCorsConfigurations());
 		mapping.setMessageConverters(getMessageConverters());
+
+		PathPatternParser patternParser = getPathMatchConfigurer().getPatternParser();
+		if (patternParser != null) {
+			mapping.setPatternParser(patternParser);
+		}
+
 		return mapping;
 	}
 
@@ -905,6 +917,9 @@ public class WebMvcConfigurationSupport implements ApplicationContextAware, Serv
 		}
 		else if (jsonbPresent) {
 			messageConverters.add(new JsonbHttpMessageConverter());
+		}
+		else if (kotlinSerializationJsonPresent) {
+			messageConverters.add(new KotlinSerializationJsonHttpMessageConverter());
 		}
 
 		if (jackson2SmilePresent) {

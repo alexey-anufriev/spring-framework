@@ -21,7 +21,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -557,7 +556,7 @@ public class Jackson2ObjectMapperBuilder {
 	 * @see com.fasterxml.jackson.databind.Module
 	 */
 	public Jackson2ObjectMapperBuilder modules(List<Module> modules) {
-		this.modules = new LinkedList<>(modules);
+		this.modules = new ArrayList<>(modules);
 		this.findModulesViaServiceLoader = false;
 		this.findWellKnownModules = false;
 		return this;
@@ -595,8 +594,9 @@ public class Jackson2ObjectMapperBuilder {
 	 * @see #modulesToInstall(Module...)
 	 * @see com.fasterxml.jackson.databind.Module
 	 */
-	@SuppressWarnings("unchecked")
-	public Jackson2ObjectMapperBuilder modulesToInstall(Class<? extends Module>... modules) {
+	@SafeVarargs
+	@SuppressWarnings("varargs")
+	public final Jackson2ObjectMapperBuilder modulesToInstall(Class<? extends Module>... modules) {
 		this.moduleClasses = modules;
 		this.findWellKnownModules = true;
 		return this;
@@ -841,8 +841,8 @@ public class Jackson2ObjectMapperBuilder {
 			// jackson-datatype-jsr310 not available
 		}
 
-		// Joda-Time present?
-		if (ClassUtils.isPresent("org.joda.time.LocalDate", this.moduleClassLoader)) {
+		// Joda-Time 2.x present?
+		if (ClassUtils.isPresent("org.joda.time.YearMonth", this.moduleClassLoader)) {
 			try {
 				Class<? extends Module> jodaModuleClass = (Class<? extends Module>)
 						ClassUtils.forName("com.fasterxml.jackson.datatype.joda.JodaModule", this.moduleClassLoader);
